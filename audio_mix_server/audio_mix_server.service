@@ -1,0 +1,14 @@
+[Unit]
+Description=Audio Mix Server
+After=sound.target
+
+[Service]
+Type=simple
+User=root
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/bin/audio_mix_server
+RestartSec=5
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

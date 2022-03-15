@@ -1,0 +1,175 @@
+Manager hierarchy
+=================
+
+Service         org.bluealsa[.unique ID]
+Interface       org.bluealsa.Manager1
+Object path     [variable prefix]/
+
+Methods         array{object, dict} GetPCMs()
+
+                        Returns the array of available PCM objects and
+                        associated properties.
+
+Signals         void PCMAdded(object path, dict props)
+
+                        Signal emitted when new PCM is added. It contains
+                        the object path and associated properties.
+
+                void PCMRemoved(object path)
+
+                        Signal emitted when device has been removed. The
+                        object path is only for a reference - it has been
+                        already removed.
+
+Properties      string Version [readonly]
+
+                        Version of BlueALSA service.
+
+                array{string} Adapters [readonly]
+
+                        Used HCI adapters. The device names ("hci0", etc.) of
+                        Bluetooth adapters that the BlueALSA service is using.
+
+PCM hierarchy
+=============
+
+Service         org.bluealsa[.unique ID]
+Interface       org.bluealsa.PCM1
+Object path     [variable prefix]/{hci0,...}/dev_XX_XX_XX_XX_XX_XX/[type]/[mode]
+
+Methods         fd, fd Open()
+
+                        Open BlueALSA PCM stream. This method returns two file
+                        descriptors, respectively PCM stream PIPE and PCM
+                        controller SEQPACKET socket.
+
+                        Controller socket commands: "Drain", "Drop", "Pause",
+                                                    "Resume"
+
+                        Possible Errors: dbus.Error.InvalidArguments
+                                         dbus.Error.NotSupported
+                                         dbus.Error.Failed
+
+                array{string, dict} GetCodecs()
+
+                        Return the array of additional PCM codecs. Client can
+                        switch to one of these codecs with the SelectCodec()
+                        D-Bus method call.
+
+                void SelectCodec(string codec, dict props)
+
+                        Select PCM codec. This call shall be made before PCM
+                        stream opening for given transport type, otherwise the
+                        ongoing stream (or PCM counterpart: sink, source) will
+                        be terminated.
+
+                        For A2DP codecs, client can override build-in logic
+                        for selecting codec configuration by providing the
+                        configuration blob via the "Configuration" property.
+
+                        Possible Errors: dbus.Error.InvalidArguments
+                                         dbus.Error.NotSupported
+                                         dbus.Error.Failed
+
+Properties      object Device [readonly]
+
+                        BlueZ device object path.
+
+                uint32 Sequence [readonly]
+
+                        This property indicates the sequence in which devices
+                        connected. The larger the value, the later the device
+                        was connected.
+
+                string Transport [readonly]
+
+                        Underlying Bluetooth transport type.
+
+                        Possible values: "A2DP-sink", "A2DP-source", "HFP-AG",
+                                         "HFP-HF", "HSP-AG" or "HSP-HS"
+
+                string Mode [readonly]
+
+                        PCM stream operation mode (direction).
+
+                        Possible values: "sink" or "source"
+
+                uint16 Format [readonly]
+
+                        Stream format identifier. The highest two bits of the
+                        16-bit identifier determine the signedness and the
+                        endianness. Next 6 bits determine the physical width
+                        of a sample in bytes. The lowest 8 bits are used to
+                        store the actual sample bit-width.
+
+                        Examples: 0x4210 - unsigned 16-bit 2 bytes big-endian
+                                  0x8418 - signed 24-bit 4 bytes little-endian
+
+                byte Channels [readonly]
+
+                        Number of audio channels.
+
+                uint32 Sampling [readonly]
+
+                        Sampling frequency.
+
+                uint16 Codec [readonly]
+
+                        Bluetooth transport codec. The meaning of this value
+                        depends on the Bluetooth transport type.
+
+                uint16 Delay [readonly]
+
+                        Approximate PCM delay in 1/10 of millisecond.
+
+                boolean SoftVolume [readwrite]
+
+                        This property determines whether BlueALSA will make
+                        volume control internally or will delegate this task
+                        to BlueALSA PCM client or connected Bluetooth device
+                        respectively for PCM sink or PCM source.
+
+                uint16 Volume [readwrite]
+
+                        This property holds volume (loudness) value and mute
+                        information for channel 1 (left) and 2 (right). Data
+                        for channel 1 is stored in the upper byte, channel 2
+                        is stored in the lower byte. The highest bit of both
+                        bytes determines whether channel is muted.
+
+                        Possible A2DP values: 0-127
+                        Possible SCO values: 0-15
+
+RFCOMM hierarchy
+================
+
+Service         org.bluealsa[.unique ID]
+Interface       org.bluealsa.RFCOMM1
+Object path     [variable prefix]/{hci0,hci1,...}/dev_XX_XX_XX_XX_XX_XX/rfcomm
+
+Methods         fd Open()
+
+                        Open RFCOMM socket for dispatching AT commands not
+                        handled internally by BlueALSA. This method returns
+                        a SEQPACKET socket.
+
+                        Possible Errors: dbus.Error.NotSupported
+                                         dbus.Error.Failed
+
+Properties      string Transport [readonly]
+
+                        HFP/HSP transport type.
+
+                        Possible values: "HFP-AG", "HFP-HF", "HSP-AG" or
+                                         "HSP-HS"
+
+                uint32 Features [readonly]
+
+                        HFP feature bitmask. Note, that this value depends on
+                        the connection mode.
+
+                byte Battery [readonly]
+
+                        Remote device battery level.
+
+                        Possible values: 0-100 or -1

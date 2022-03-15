@@ -1,0 +1,5 @@
+0000000000000000000000000000000000000000 07c6afc79550c2bc64345280dec67c5f124a5d92 niko132 <nikokirste@hotmail.de> 1625601269 +0200	clone: from https://github.com/niko132/bluez-alsa.git
+07c6afc79550c2bc64345280dec67c5f124a5d92 dfe9b69f38b6f570f8f152af485c5c9ca356f073 niko132 <nikokirste@hotmail.de> 1625601287 +0200	checkout: moving from master to ring_buff
+dfe9b69f38b6f570f8f152af485c5c9ca356f073 d667fb1b2c1f023de6f17b8521f162de85912b18 niko132 <nikokirste@hotmail.de> 1625608340 +0200	commit: added functionality to resize ring buffer to period size
+d667fb1b2c1f023de6f17b8521f162de85912b18 d667fb1b2c1f023de6f17b8521f162de85912b18 niko132 <nikokirste@hotmail.de> 1625608467 +0200	checkout: moving from ring_buff to dynamic_pcm
+d667fb1b2c1f023de6f17b8521f162de85912b18 5269f4f4e3f4bce54df63d4c260349189cdaae8b niko132 <nikokirste@hotmail.de> 1647369182 +0100	commit: added dynamic config based on mac address

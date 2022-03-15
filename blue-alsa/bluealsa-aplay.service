@@ -1,0 +1,15 @@
+[Unit]
+Description=BlueALSA aplay
+Requires=bluealsa.service
+After=bluealsa.service sound.target audio_mix_server.service
+
+[Service]
+Type=simple
+User=root
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/bin/bluealsa-aplay -Dupmix2to51pc --pcm-buffer-time=96000 --pcm-period-time=32000 --single-audio -vv 00:00:00:00:00:00
+RestartSec=5
+Restart=always
+
+[Install]
+WantedBy=multi-user-target

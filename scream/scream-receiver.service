@@ -1,0 +1,14 @@
+[Unit]
+Description=Scream Receiver
+After=sound.target audio_mix_server.service
+
+[Service]
+Type=simple
+User=root
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/bin/scream -u -p 4011 -o alsa -d remapDesktop -t 50 -vv
+RestartSec=5
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
