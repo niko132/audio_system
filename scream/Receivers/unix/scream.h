@@ -24,6 +24,7 @@ typedef struct receiver_data {
   unsigned char* audio;
 
   char *alsa_device;
+  int map_id;
 } receiver_data_t;
 
 static int verbosity = 0;

@@ -131,7 +131,7 @@ int main()
 
 
     int latency = 25;
-    char *alsa_device = "remapDesktop";
+    char *alsa_device = "default51";
 
     alsa_output_init(latency, alsa_device);
 

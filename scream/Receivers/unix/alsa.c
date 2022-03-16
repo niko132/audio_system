@@ -56,7 +56,7 @@ int alsa_output_send(receiver_data_t *data)
   int i = 0;
   int samples = (data->audio_size) / (ao_data.bytes_per_sample * rf->channels);
   while (i < samples) {
-    written = audio_mix_write_frames(&data->audio[i * ao_data.bytes_per_sample * rf->channels], samples - i, rf->channels);
+    written = audio_mix_write_frames(&data->audio[i * ao_data.bytes_per_sample * rf->channels], samples - i, rf->channels, data->map_id);
 
     if (written < 0) {
       return 0;

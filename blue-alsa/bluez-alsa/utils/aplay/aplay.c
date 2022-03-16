@@ -358,6 +358,18 @@ static void *pcm_worker_routine(struct pcm_worker *w) {
 
         audio_mix_init();
 
+
+        int map_id;
+
+        if (strcmp(w->addr, "C8:E2:65:9B:45:46") == 0) {
+            map_id = CHANNEL_MAP_DESKTOP;
+        } else if (strcmp(w->addr, "28:7F:CF:24:72:D6") == 0) {
+             map_id = CHANNEL_MAP_LAPTOP;
+        } else {
+            map_id = CHANNEL_MAP_DEFAULT;
+        }
+
+
         ring_buff_resize(&buffer, 200000); // a bit more than 1sec of buffer
 
 
@@ -429,7 +441,7 @@ static void *pcm_worker_routine(struct pcm_worker *w) {
 		snd_pcm_sframes_t frames = read_bytes / w->ba_pcm.channels / pcm_format_size;
 
 
-                if ((frames = audio_mix_write_frames(read_buff, frames, w->ba_pcm.channels)) < 0) {
+                if ((frames = audio_mix_write_frames(read_buff, frames, w->ba_pcm.channels, map_id)) < 0) {
                   switch (-frames) {
                         case EPIPE:
                                 debug("An underrun has occurred");

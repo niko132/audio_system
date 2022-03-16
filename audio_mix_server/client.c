@@ -36,7 +36,7 @@ int main()
 
     while (1) {
         // aaa = send(s1, buffer, 441 * 2 * 6, 0);
-        aaa = audio_mix_write(buffer, 441 * 2 * 6, 6);
+        aaa = audio_mix_write(buffer, 441 * 2 * 6, 6, CHANNEL_MAP_DEFAULT);
         printf("printing ... %d\n", aaa);
     }
 

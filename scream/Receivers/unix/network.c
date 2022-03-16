@@ -1,8 +1,9 @@
 #include "network.h"
 #include <stdio.h>
 
-
 #include <sys/time.h>
+
+#include "audio_mix.h"
 
 
 static rctx_network_t rctx_network;
@@ -49,10 +50,14 @@ void rcv_network(receiver_data_t* receiver_data)
 
   // printf("Packet from %s (%u bytes)\n", inet_ntoa(from.sin_addr), n);
 
-  if (strcmp("192.168.178.74", inet_ntoa(from.sin_addr)) == 0) {
-    receiver_data->alsa_device = "upmix4to51normal";
+  if (strcmp("192.168.3.3", inet_ntoa(from.sin_addr)) == 0) {
+    receiver_data->map_id = CHANNEL_MAP_DESKTOP;
+  } else if (strcmp("192.168.3.4", inet_ntoa(from.sin_addr)) == 0) {
+    receiver_data->map_id = CHANNEL_MAP_DESKTOP;
+  } else if (strcmp("192.168.3.5", inet_ntoa(from.sin_addr)) == 0) {
+    receiver_data->map_id = CHANNEL_MAP_LAPTOP;
   } else {
-    receiver_data->alsa_device = "upmix4to51laptopnormal";
+    receiver_data->map_id = CHANNEL_MAP_DEFAULT;
   }
 
   totalRec += n - 5; // subtract the header size
