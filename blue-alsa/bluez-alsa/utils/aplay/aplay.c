@@ -441,7 +441,7 @@ static void *pcm_worker_routine(struct pcm_worker *w) {
 		snd_pcm_sframes_t frames = read_bytes / w->ba_pcm.channels / pcm_format_size;
 
 
-                if ((frames = audio_mix_write_frames(read_buff, frames, w->ba_pcm.channels, map_id)) < 0) {
+                if ((frames = audio_mix_write_frames(w->addr, read_buff, frames, w->ba_pcm.channels, map_id)) < 0) {
                   switch (-frames) {
                         case EPIPE:
                                 debug("An underrun has occurred");

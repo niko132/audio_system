@@ -60,6 +60,10 @@ void rcv_network(receiver_data_t* receiver_data)
     receiver_data->map_id = CHANNEL_MAP_DEFAULT;
   }
 
+  // use the ip address as a stream identifier
+  strcpy(receiver_data->key, inet_ntoa(from.sin_addr));
+
+
   totalRec += n - 5; // subtract the header size
 
   struct timeval now;

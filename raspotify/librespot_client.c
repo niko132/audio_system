@@ -20,7 +20,7 @@ int main()
         }
 
         while (numRead > 0) {
-            numWrite = audio_mix_write(buffer, numRead, 2, CHANNEL_MAP_DEFAULT);
+            numWrite = audio_mix_write("default", buffer, numRead, 2, CHANNEL_MAP_DEFAULT);
             numRead = numRead - numWrite;
         }
     }

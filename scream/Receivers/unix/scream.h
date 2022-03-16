@@ -25,6 +25,7 @@ typedef struct receiver_data {
 
   char *alsa_device;
   int map_id;
+  char key[20];
 } receiver_data_t;
 
 static int verbosity = 0;
