@@ -17,6 +17,13 @@
 #define SOCKNAME "/var/run/unix_socket_test.sock"
 
 #define NUM_SOCKETS 10
+#define BYTES_PER_SAMPLE 2
+#define NUM_CHANNELS 6
+#define NUM_FRAMES_PER_LOOP 441 // 10ms
+#define BYTES_PER_LOOP (BYTES_PER_SAMPLE * NUM_CHANNELS * NUM_FRAMES_PER_LOOP)
+#define DELETE_SAMPLE_FAC 6
+
+#define ALSA_DEVICE "default51"
 
 
 int findFreeIndex(int *files, size_t len) {
@@ -67,6 +74,36 @@ void addSocketData(unsigned char *audioBuf, unsigned char *socketBuf, size_t aud
             continue;
         }
 
+
+        size_t bytesAvailable;
+        ioctl(files[i], FIONREAD, &bytesAvailable);
+
+//        printf("Bytes available: %d\n", bytesAvailable);
+
+        if (bytesAvailable > BYTES_PER_LOOP * DELETE_SAMPLE_FAC) {
+            size_t tooMuch = bytesAvailable - BYTES_PER_LOOP * DELETE_SAMPLE_FAC;
+
+            if (tooMuch > BYTES_PER_SAMPLE * NUM_CHANNELS * 5) {
+                tooMuch = BYTES_PER_SAMPLE * NUM_CHANNELS * 5;
+            }
+
+            size_t samplesTooMuch = (size_t)ceil((double)tooMuch / BYTES_PER_SAMPLE / NUM_CHANNELS);
+            ssize_t deleteBytes = samplesTooMuch * BYTES_PER_SAMPLE * NUM_CHANNELS;
+
+            printf("Deleted %d bytes (%fms)\n", deleteBytes, deleteBytes / 2.0 / 6.0 / 44.1);
+
+            unsigned char deleteBuffer[1024];
+
+            while (deleteBytes > 0) {
+                size_t count = 1024;
+                if (deleteBytes < count) {
+                    count = deleteBytes;
+                }
+                size_t readBytes = read(files[i], deleteBuffer, count);
+                deleteBytes = deleteBytes - readBytes;
+            }
+        }
+
         num = read(files[i], socketSampleBuf, audioSize);
         // TODO: do error handling
 
@@ -79,8 +116,6 @@ void addSocketData(unsigned char *audioBuf, unsigned char *socketBuf, size_t aud
         for (j = 0; j < num; j += 1) {
             audioSampleBuf[j] += socketSampleBuf[j]; // add contributions to global buffer
         }
-
-        printf("Added %d samples\n", num);
     }
 }
 
@@ -115,160 +150,43 @@ int main()
         printf("E: %s\n", strerror(errno));
     }
 
-
     // set accept to non blocking
     fcntl(s1, F_SETFL, O_NONBLOCK);
-
-
     bind(s1, (struct sockaddr *)&sa, sizeof sa);
-    listen(s1, 5);
+    listen(s1, 10);
 
 
     int files[NUM_SOCKETS];
     memset(files, -1, NUM_SOCKETS * sizeof(int));
 
 
-
-
-    int latency = 25;
-    char *alsa_device = "default51";
-
-    alsa_output_init(latency, alsa_device);
-
+    unsigned char *audioBuf = (unsigned char*)malloc(BYTES_PER_LOOP);
+    unsigned char *socketBuf = (unsigned char*)malloc(BYTES_PER_LOOP);
     receiver_data_t rec_data;
 
     rec_data.format.sample_rate = 129;
-    rec_data.format.sample_size = 16;
-    rec_data.format.channels = 6;
+    rec_data.format.sample_size = BYTES_PER_SAMPLE * 8;
+    rec_data.format.channels = NUM_CHANNELS;
     rec_data.format.channel_map = 6; // maybe change later
-
-
-
-    size_t num_frames_write = 441;
-
-    rec_data.audio_size = num_frames_write * 2 * 6; // 10 ms
-    rec_data.audio = (unsigned char*)malloc(num_frames_write * 2 * 6);
-
-
-    /*
-    int16_t *sample_buf = (int16_t*)rec_data.audio;
-
-
-    for (int a = 0; a < num_frames_write; a += 1) {
-        double rad = a * 2 * M_PI * 1000.0 / 44100.0; // 1000Hz sine
-
-        double sinVal = sin(rad);
-
-        int16_t val = (int16_t)(sinVal * 32767);
-
-        sample_buf[a * 6] = val;
-        sample_buf[a * 6 + 1] = val;
-        sample_buf[a * 6 + 2] = val;
-        sample_buf[a * 6 + 3] = val;
-        sample_buf[a * 6 + 4] = val;
-        sample_buf[a * 6 + 5] = val;
-    }
-
-
-    for (int i = 0; i < 10; i += 1) {
-        alsa_output_send(&rec_data);
-    }
-
-    snd_pcm_start(alsa_get_pcm());
-
-    while (1) {
-        snd_pcm_sframes_t num_frames = alsa_frames_avail();
-        // snd_pcm_sframes_t num_frames = alsa_frames_delay();
-
-        while (num_frames > num_frames_write) {
-            alsa_output_send(&rec_data);
-//            snd_pcm_start(alsa_get_pcm());
-            num_frames = alsa_frames_avail();
-            // num_frames = alsa_frames_delay();
-
-            printf("written!\n");
-        }
-
-//        printf("Frames: %ld\n", num_frames);
-
-        if (num_frames < 0) {
-            break;
-        }
-    }
-    */
-
-
-
-    printf("Hello World\n");
-
-
-
-    unsigned char *audioBuf = (unsigned char*)malloc(num_frames_write * 2 * 6); // hold 512 samples -> about 11.6ms of data
-    unsigned char *socketBuf = (unsigned char*)malloc(num_frames_write * 2 * 6);
-
-
-
     rec_data.audio = audioBuf;
+    rec_data.audio_size = BYTES_PER_LOOP; // 10 ms
 
-
-
-
-    for (int i = 0; i < 10; i += 1) {
-        alsa_output_send(&rec_data);
-    }
-
-    snd_pcm_start(alsa_get_pcm());
-
-
-
-    int i, err;
-    size_t bytesAvailable;
-    int shouldRead = 0;
+    int latency = 0;
+    alsa_output_init(latency, ALSA_DEVICE);
 
     while (1) {
         cleanClosedSockets(files, NUM_SOCKETS);
         acceptClientSocket(s1, files, NUM_SOCKETS);
 
-
-        /*
-        shouldRead = 0;
-        for (i = 0; i < NUM_SOCKETS; i += 1) {
-            if (files[i] == -1) {
-                continue;
-            }
-
-            err = ioctl(files[i], FIONREAD, &bytesAvailable);
-
-            if (bytesAvailable >= num_frames_write * 2 * 6 * 2) {
-                shouldRead = 1;
-            }
-        }
-
-        if (shouldRead) {
-            printf("Reading...\n");
-            memset(audioBuf, 0, num_frames_write * 2 * 6); // set audio buf to zeros -> silence
-            addSocketData(audioBuf, socketBuf, num_frames_write * 2 * 6, files, NUM_SOCKETS);
-
-            printf("Data: %d %d %d %d %d\n", audioBuf[0], audioBuf[1], audioBuf[2], audioBuf[3], audioBuf[4]);
-        }
-        */
-
-
-
         snd_pcm_sframes_t num_frames = alsa_frames_avail();
 
-//        while (num_frames > num_frames_write) {
-        if (num_frames > num_frames_write) {
-            memset(audioBuf, 0, num_frames_write * 2 * 6); // set audio buf to zeros -> silence
-            addSocketData(audioBuf, socketBuf, num_frames_write * 2 * 6, files, NUM_SOCKETS);
+        if (num_frames > NUM_FRAMES_PER_LOOP || snd_pcm_state(alsa_get_pcm()) != SND_PCM_STATE_RUNNING) {
+            memset(audioBuf, 0, BYTES_PER_LOOP); // set audio buf to zeros -> silence
+            addSocketData(audioBuf, socketBuf, BYTES_PER_LOOP, files, NUM_SOCKETS);
 
             alsa_output_send(&rec_data);
-            num_frames = alsa_frames_avail();
-
-            printf("Written %ld %ld\n", num_frames, num_frames_write);
         }
     }
-
 
     free(audioBuf);
     free(socketBuf);

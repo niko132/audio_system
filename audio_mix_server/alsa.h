@@ -5,7 +5,7 @@
 
 #define MAX_CHANNELS 8
 
-static int verbosity = 1;
+// static int verbosity = 1;
 
 typedef struct receiver_format {
   unsigned char sample_rate;

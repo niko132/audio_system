@@ -19,6 +19,10 @@ static struct alsa_output_data {
   char *alsa_device;
 } ao_data;
 
+
+static int verbosity = 1;
+
+
 void alsa_error(const char *msg, int r)
 {
   fprintf(stderr, "%s: %s\n", msg, snd_strerror(r));
